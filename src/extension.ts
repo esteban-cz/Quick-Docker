@@ -1,26 +1,47 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
+import { exec } from "child_process";
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
-
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "quick-docker" is now active!');
-
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('quick-docker.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Quick Docker!');
-	});
-
-	context.subscriptions.push(disposable);
+// Function to execute a command in the terminal
+function executeCommand(command: string) {
+  const terminal = vscode.window.createTerminal("Quick Docker Terminal");
+  terminal.sendText(command);
+  return terminal;
 }
 
-// This method is called when your extension is deactivated
+export function activate(context: vscode.ExtensionContext) {
+  // Function to check if any Docker container is running
+  function isAnyContainerRunning() {
+    return new Promise<boolean>((resolve, reject) => {
+      exec("docker ps --quiet", (err, stdout) => {
+        if (err) {
+          reject(err);
+        } else {
+          const running = stdout.trim().length > 0;
+          resolve(running);
+        }
+      });
+    });
+  }
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("quickDocker.btnPressed", async () => {
+      const isRunning = await isAnyContainerRunning();
+      const command = isRunning ? "docker-compose down" : "docker-compose up -d --build";
+      const action = isRunning ? "Stopping" : "Building and Starting";
+      
+      vscode.window.showInformationMessage(`${action} your container...`);
+      const terminal = executeCommand(command);
+    })
+  );
+
+  // Check on extension activation
+  isAnyContainerRunning().then((isRunning) => {
+    const buttonTitle = isRunning ? "Stop Container" : "Build and Start";
+    const icon = isRunning ? "$(debug-stop)" : "$(run-all)";
+
+    vscode.commands.executeCommand("setContext", "dockerRunning", isRunning);
+    vscode.commands.executeCommand("setContext", "dockerBtnTitle", buttonTitle);
+    vscode.commands.executeCommand("setContext", "dockerBtnIcon", icon);
+  });
+}
 export function deactivate() {}

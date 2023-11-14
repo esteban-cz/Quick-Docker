@@ -1,8 +1,8 @@
 {
   "name": "quick-docker",
   "displayName": "Quick Docker",
-  "description": "",
-  "version": "0.0.1",
+  "description": "Quick Docker will quickly build and start your docker container ",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.84.0"
   },
@@ -11,13 +11,38 @@
   ],
   "activationEvents": [],
   "main": "./out/extension.js",
+  "icon": "icon/logo.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/esteban-cz/Quick-Docker"
+  },
   "contributes": {
+    "menus": {
+      "editor/title": [
+        {
+          "command": "quickDocker.btnPressed",
+          "group": "navigation"
+        }
+      ]
+    },
     "commands": [
       {
-        "command": "quick-docker.helloWorld",
-        "title": "Hello World"
+        "command": "quickDocker.btnPressed",
+        "title": "Build and Start",
+        "icon": "$(run-all)"
       }
-    ]
+    ],  
+    "configuration": {
+      "type": "object",
+      "title": "Quick Docker",
+      "properties": {
+        "quickDocker.defaultCommand": {
+          "type": "string",
+          "default": "docker-compose up -d --build",
+          "description": "The default command"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
